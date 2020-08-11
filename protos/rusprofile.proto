@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package rusprofile;
+
+import "google/api/annotations.proto";
+
+
+message Counterparty {
+  uint64 INN = 1;
+  uint64 KPP = 2;
+  string title = 3;
+  string head = 4;
+}
+
+message INN {
+  uint64 id = 1;
+}
+
+service Service {
+  rpc FetchCounterparty(INN) returns (Counterparty) {
+    option (google.api.http) = {get: "/inn/{id}"};
+  }
+}
