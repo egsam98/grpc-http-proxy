@@ -1,4 +1,4 @@
-module rusproile
+module github.com/egsam98/rusprofile
 
 go 1.14
 

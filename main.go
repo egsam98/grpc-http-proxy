@@ -3,16 +3,14 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"github.com/egsam98/rusprofile/api/rusprofile"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"rusproile/api/rusprofile"
 )
-
-var PORT = os.Getenv("PORT")
 
 func main() {
 	logger := initLogger()
@@ -33,7 +31,7 @@ func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("swagger"))))
 	http.Handle("/api/", mux)
 
-	if err := http.ListenAndServe(":"+PORT, nil); err != nil {
+	if err := http.ListenAndServe(":8080", nil); err != nil {
 		panic(err)
 	}
 }
