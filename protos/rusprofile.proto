@@ -3,9 +3,24 @@ syntax = "proto3";
 package rusprofile;
 
 import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
 
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+  info: {
+    title: "rusprofile.ru RESTful сервис"
+    version: "1.0"
+  };
+  schemes: [HTTP]
+};
 
 message Counterparty {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    example: {
+      value: '{"INN": "1234567890", "KPP": "12345678", "title": "ОАО \'Ромашка\'", "head": "Сидоров И.И."}'
+    }
+  };
+
   uint64 INN = 1;
   uint64 KPP = 2;
   string title = 3;
@@ -16,8 +31,27 @@ message INN {
   uint64 id = 1;
 }
 
+message Error {
+  string error = 1;
+  uint32 gRPC_code = 2;
+}
+
 service Service {
   rpc FetchCounterparty(INN) returns (Counterparty) {
-    option (google.api.http) = {get: "/inn/{id}"};
+    option (google.api.http) = {get: "/api/counterparty/{id}"};
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      summary: "Counterparty"
+      description: "Запрос информации о контрагенте по переданному ИНН (id)",
+      responses: {
+        key: 'default'
+        value: {
+          schema: {
+            json_schema {
+              ref: ".rusprofile.Error"
+            }
+          }
+        }
+      }
+    };
   }
 }

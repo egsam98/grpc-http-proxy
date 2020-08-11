@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	rusprofile2 "rusproile/api/rusprofile"
+	"rusproile/api/rusprofile"
 )
 
 var PORT = os.Getenv("PORT")
@@ -18,11 +18,22 @@ func main() {
 	logger := initLogger()
 
 	mux := runtime.NewServeMux(runtime.WithProtoErrorHandler(errorHandler))
-	err := rusprofile2.RegisterServiceHandlerServer(context.Background(), mux, rusprofile2.NewRusprofileServer(logger))
+	err := rusprofile.RegisterServiceHandlerServer(context.Background(), mux, rusprofile.NewRusprofileServer(logger))
 	if err != nil {
 		panic(err)
 	}
-	if err := http.ListenAndServe(":"+PORT, mux); err != nil {
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.RequestURI != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		http.ServeFile(w, r, "swagger/ui.html")
+	})
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("swagger"))))
+	http.Handle("/api/", mux)
+
+	if err := http.ListenAndServe(":"+PORT, nil); err != nil {
 		panic(err)
 	}
 }
@@ -39,9 +50,10 @@ func errorHandler(_ context.Context, _ *runtime.ServeMux, _ runtime.Marshaler, w
 	st := status.Convert(err)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(runtime.HTTPStatusFromCode(st.Code()))
-	err = json.NewEncoder(w).Encode(map[string]interface{}{
-		"error":     st.Message(),
-		"gRPC-code": st.Code(),
+	encoder := json.NewEncoder(w)
+	err = encoder.Encode(rusprofile.Error{
+		Error:    st.Message(),
+		GRPCCode: uint32(st.Code()),
 	})
 	if err != nil {
 		w.Write([]byte(`{"error": "failed to marshal error"}`))
